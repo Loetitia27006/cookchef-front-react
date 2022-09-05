@@ -1,11 +1,32 @@
+import Cookies from "js-cookie";
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useContext } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/images/cookchef-d.png";
+import { AuthContext } from "../../context/AuthContext";
+import { UserContext } from "../../context/UserContext";
 import styles from "./Header.module.scss";
 import HeaderMenuResponsive from "./HeaderMenuResponsive";
 
 const Header = ({ setPage }) => {
+  let navigate = useNavigate();
+  const [auth, setAuth] = useContext(AuthContext);
+  const [, setCurrentUser] = useContext(UserContext);
+
   const [showMenu, setShowMenu] = useState(false);
+
+  const handleClickLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:3333/api/users/logout");
+      if (response.ok) {
+        setAuth(Cookies.remove("jwt"));
+        setCurrentUser(localStorage.removeItem("currentUser"));
+        navigate("/auth/login");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <header className={`${styles.header} d-flex flex-row align-items-center`}>
@@ -18,7 +39,19 @@ const Header = ({ setPage }) => {
         </NavLink>
 
         <button className="mr-15 btn btn-reverse-primary">Wishlist</button>
-        <button className="btn btn-primary">connexion</button>
+
+        {auth && auth[0] ? (
+          <button
+            onClick={handleClickLogout}
+            className="btn btn-reverse-primary"
+          >
+            déconnexion
+          </button>
+        ) : (
+          <NavLink to="/auth/login" className="btn btn-primary">
+            connexion
+          </NavLink>
+        )}
       </ul>
       <i
         onClick={() => setShowMenu(!showMenu)}
