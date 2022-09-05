@@ -1,15 +1,25 @@
+import Cookies from "js-cookie";
 import React from "react";
+import { useContext } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
+import { UserContext } from "../../../context/UserContext";
 import styles from "../../Admin/components/RecipeForm.module.scss";
 
 const AuthForm = () => {
+  const [, setAuth] = useContext(AuthContext);
+  const [, setCurrentUser] = useContext(UserContext);
+
+  let navigate = useNavigate();
+
   let defaultValues = {
     email: "",
     password: "",
   };
 
   const {
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
     register,
     handleSubmit,
     setError,
@@ -34,6 +44,18 @@ const AuthForm = () => {
       if (response.ok) {
         const user = await response.json();
         console.log(user);
+        Cookies.set("jwt", user.token);
+        setAuth(() => {
+          const savedCookie = Cookies.get("jwt");
+          return savedCookie || "";
+        });
+        setCurrentUser(() => {
+          const saved = localStorage.getItem("currentUser");
+          const initialValue = JSON.parse(saved);
+          return initialValue || "";
+        });
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        navigate("/");
       }
     } catch (error) {
       console.log(error);
